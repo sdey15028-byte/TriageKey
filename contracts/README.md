@@ -1,14 +1,17 @@
 # Compact contract notes
 
-`TriageKey.compact` describes two circuits: `prove_eligibility` and `set_policy`.
-The proof circuit uses private witness values for the issuer signature, age predicate,
-care-pathway predicate and holder secret. Its only `disclose()` is the Boolean
-eligibility result. The nullifier derives from the private holder secret plus a
-public nonce and policy hash, preventing replay without publishing the holder.
+`TriageKey.compact` defines issuer administration, policy administration and
+`proveEligibility` circuits. The eligibility circuit uses private witness values for
+the issuer signature, age predicate, care-pathway predicate and holder secret. Its
+only result disclosure is the Boolean eligibility outcome. A holder-secret-derived
+nullifier prevents replay without publishing the holder.
 
 This repository pins the Midnight.js 4.1.1-compatible Compact compiler at `0.31.1`.
-Run `npm run contracts:compile` on Linux/macOS, or on Windows with Docker Desktop
-running, and commit the generated browser artifacts under `contracts/artifacts/`.
-The frontend should obtain the contract address from the
-wallet-approved runtime deployment flow and retain it in the active session/public
-receipt; it must not be baked into the frontend environment.
+The generated browser artifacts are committed under `contracts/artifacts/`, and
+`npm run contracts:verify` prevents a frontend build if any required file is absent
+or looks like a placeholder. Recompile after every contract change with
+`npm run contracts:compile` on Linux/macOS, or on Windows with Docker Desktop.
+
+The frontend obtains each contract address from the wallet-approved runtime
+deployment and retains only its public receipt. The address is never baked into a
+frontend environment variable.

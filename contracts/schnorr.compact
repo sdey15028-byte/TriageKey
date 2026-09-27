@@ -1,0 +1,54 @@
+// Jubjub Schnorr verification module adapted from Midnight Foundation's
+// Apache-2.0 licensed example-zkloan reference implementation.
+module schnorr {
+  import CompactStandardLibrary;
+
+  export struct SchnorrSignature {
+    announcement: JubjubPoint;
+    response: Field;
+  }
+
+  struct SchnorrHashInput<#n> {
+    ann_x: Field;
+    ann_y: Field;
+    pk_x: Field;
+    pk_y: Field;
+    msg: Vector<n, Field>;
+  }
+
+  witness getSchnorrReduction(challengeHash: Field): [Uint<7>, Uint<248>];
+
+  export circuit schnorrVerify<#n>(
+    msg: Vector<n, Field>,
+    signature: SchnorrSignature,
+    publicKey: JubjubPoint
+  ): [] {
+    const { announcement, response } = signature;
+    const challengeHash: Field = transientHash<SchnorrHashInput<n>>(
+      SchnorrHashInput<n> {
+        ann_x: jubjubPointX(announcement),
+        ann_y: jubjubPointY(announcement),
+        pk_x: jubjubPointX(publicKey),
+        pk_y: jubjubPointY(publicKey),
+        msg: msg
+      }
+    );
+
+    const TWO_248: Field =
+      452312848583266388373324160190187140051835877600158453279131187530910662656 as Field;
+    const [quotient, truncatedChallenge] = getSchnorrReduction(challengeHash);
+    assert(disclose(quotient) < 116, "Schnorr quotient is out of range");
+    assert(
+      disclose(quotient) * TWO_248 + (disclose(truncatedChallenge) as Field) == challengeHash,
+      "Invalid Schnorr challenge reduction"
+    );
+
+    const challenge = disclose(truncatedChallenge) as Field;
+    const expected = ecAdd(announcement, ecMul(publicKey, challenge));
+    const actual = ecMulGenerator(response);
+    assert(
+      jubjubPointX(actual) == jubjubPointX(expected) && jubjubPointY(actual) == jubjubPointY(expected),
+      "Invalid credential signature"
+    );
+  }
+}

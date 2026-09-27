@@ -2,7 +2,7 @@
 
 > Privacy-preserving eligibility for care programs. A patient proves a public rule without exposing their medical record.
 
-![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/sdey15028-byte/TriageKey/actions/workflows/ci.yml/badge.svg)
 
 ## Product and privacy
 
@@ -30,7 +30,7 @@ uv run --directory backend uvicorn app.main:app --reload
 
 Copy `.env.example` to `backend/.env`. Keep `GEMINI_API_KEY` server-side. Use a Neon development branch for `DATABASE_URL`; reserve `DATABASE_DIRECT_URL` for `uv run --directory backend alembic upgrade head`.
 
-For a real Midnight run, compile `contracts/TriageKey.compact` with the pinned `0.31.1` toolchain (`npm run contracts:compile`; Docker Desktop is required on Windows), commit the generated browser artifacts, configure 1AM with the same network, and start a proof server. The application must obtain the deployed contract address at runtime from the wallet-approved deployment flow; it is not a frontend environment variable:
+The Compact contract and all four circuits are compiled with toolchain `0.31.1`; the generated bindings, ZK IR, prover keys and verifier keys are committed under `contracts/artifacts/`. Configure 1AM for the selected network and start a compatible proof server. The application obtains every deployed contract address at runtime from the wallet-approved deployment flow; it is not a frontend environment variable:
 
 ```bash
 docker compose -f docker-compose.proof.yml up
@@ -64,4 +64,4 @@ GitHub Actions verifies Node 22, Python, frontend lint/tests/build, and backend 
 
 ## Limitations and next steps
 
-The repository intentionally does not pretend an unconfigured wallet, compiler, proof server, Neon project, Gemini key, or hosting target exists. The receipt pipeline and deployment-adapter boundary are implemented, but a real transaction still requires compiling `contracts/TriageKey.compact` against the selected Midnight network release and registering those generated bindings with `registerDeploymentAdapter`. Before production, also provision Neon, run the migration, configure the Vercel Services project, and capture a real wallet-backed demo.
+The compiled contract and real Midnight deployment adapter are wired into the frontend. A real transaction still requires a connected 1AM wallet on the selected network, sufficient DUST, a compatible proof server and reachable indexer. The eligibility circuit additionally requires a trusted issuer to be registered and a valid signed attestation to be enrolled; the current UI performs contract deployment and shows its finalized identifiers, but does not fabricate an eligibility proof. Before production, provision Neon, run the migration, configure the Vercel Services project, and capture a real wallet-backed demo.

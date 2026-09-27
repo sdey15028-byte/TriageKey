@@ -14,9 +14,9 @@ export type DeploymentAdapter = (input: {
   credential: LocalCredential
 }) => Promise<FinalizedDeploymentPublicData>
 
-let deploymentAdapter: DeploymentAdapter | null = null
+let deploymentAdapter: DeploymentAdapter | undefined
 
-/** Generated Compact bindings register their real deployment implementation here. */
+/** Tests or alternate runtimes can replace the built-in Midnight deployment implementation. */
 export function registerDeploymentAdapter(adapter: DeploymentAdapter): void {
   deploymentAdapter = adapter
 }
@@ -31,12 +31,14 @@ export async function deployEligibilityContract(input: {
     throw new Error(`1AM is no longer connected to ${input.network}. Reconnect before deploying.`)
   }
 
-  await input.wallet.hintUsage(['getProvingProvider', 'balanceUnsealedTransaction', 'submitTransaction'])
-  if (!deploymentAdapter) {
-    throw new Error('The Compact contract artifacts are not compiled yet. No transaction was created and no identifier was fabricated.')
-  }
-
-  const finalized = await deploymentAdapter(input)
+  await input.wallet.hintUsage([
+    'getShieldedAddresses',
+    'getProvingProvider',
+    'balanceUnsealedTransaction',
+    'submitTransaction',
+  ])
+  const adapter = deploymentAdapter ?? (await import('./midnightDeployment')).deployWithMidnight
+  const finalized = await adapter(input)
   const receipt = receiptFromFinalizedDeployment(finalized, input.network)
   announcePublicReceipt(receipt)
 

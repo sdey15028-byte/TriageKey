@@ -28,7 +28,7 @@ export async function connectWallet(network: Network): Promise<{ wallet: Discove
 export function classifyWalletError(error: unknown): string {
   const text = error instanceof Error ? error.message : String(error)
   if (/reject|denied|cancel/i.test(text)) return 'Wallet request was rejected. Your private record did not leave this device.'
-  if (/dust|balance/i.test(text)) return 'Insufficient DUST to prove this request. Fund DUST in 1AM and try again.'
+  if (/dust|balance/i.test(text)) return 'Insufficient DUST for this deployment. Fund DUST in 1AM and try again.'
   if (/proof|proving/i.test(text)) return 'The proving service is unavailable. No transaction was submitted.'
   if (/indexer/i.test(text)) return 'The indexer is delayed. Check the wallet’s configured indexer and retry.'
   return 'The wallet could not connect. No transaction was submitted.'

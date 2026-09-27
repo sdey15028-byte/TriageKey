@@ -1,35 +1,90 @@
-// TriageKey is a selective-disclosure eligibility contract.
-// The public ledger contains only policy metadata, aggregate counts and nullifiers.
-pragma language_version >= 0.16;
+// TriageKey selective-disclosure eligibility contract.
+// Private credential attributes and signatures are supplied by local witnesses.
+// The public ledger contains only policy metadata, issuer keys, counters and
+// one-time nullifiers.
+pragma language_version >= 0.22 && <= 0.23;
 
-export ledger policy_hash: Bytes<32>;
-export ledger finalized_proofs: Uint<64>;
-export ledger used_nullifiers: Set<Bytes<32>>;
+import CompactStandardLibrary;
+import "schnorr" prefix Schnorr_;
 
-// Private witness fields are supplied by the holder’s local credential adapter.
-// They never appear in public ledger state or a disclosure call.
-witness private issuer_signature: Bytes<64>;
-witness private age_over_18: Boolean;
-witness private qualifying_pathway: Boolean;
-witness private holder_secret: Bytes<32>;
+export { Schnorr_SchnorrSignature };
 
-// disclose() justification: the verifier needs only the yes/no result in order
-// to grant or refuse program access. It must not learn any underlying attribute.
-export circuit prove_eligibility(policy: Bytes<32>, nonce: Bytes<32>): Boolean {
-  assert(policy == policy_hash);
-  assert(age_over_18);
-  assert(qualifying_pathway);
-  assert(verify_issuer_signature(issuer_signature, policy, holder_secret));
-  const nullifier = hash(holder_secret, nonce, policy);
-  assert(!used_nullifiers.member(nullifier));
-  used_nullifiers.insert(nullifier);
-  finalized_proofs = finalized_proofs + 1;
-  return disclose(true);
+export struct EligibilityCredential {
+  ageOver18: Boolean;
+  qualifyingPathway: Boolean;
 }
 
-// A separate circuit allows an authority to set a public policy hash, without
-// receiving a holder’s witness. It is intentionally independent from proving.
-export circuit set_policy(next_policy_hash: Bytes<32>): [] {
-  assert(next_policy_hash != policy_hash);
-  policy_hash = next_policy_hash;
+export new type HolderSecret = Bytes<32>;
+export new type AdminKey = Bytes<32>;
+
+export ledger policyHash: Bytes<32>;
+export ledger adminKey: AdminKey;
+export ledger finalizedProofs: Counter;
+export ledger usedNullifiers: Set<Bytes<32>>;
+export ledger trustedIssuers: Map<Uint<16>, JubjubPoint>;
+
+witness getHolderSecret(): HolderSecret;
+witness getEligibilityCredential(): [EligibilityCredential, Schnorr_SchnorrSignature, Uint<16>];
+
+export pure circuit deriveAdminKey(secret: HolderSecret): AdminKey {
+  return persistentHash<[Bytes<22>, HolderSecret]>([
+    "triagekey:admin:key:v1",
+    secret
+  ]) as AdminKey;
+}
+
+constructor(initialPolicyHash: Bytes<32>) {
+  policyHash = disclose(initialPolicyHash);
+  adminKey = disclose(deriveAdminKey(getHolderSecret()));
+}
+
+export circuit registerIssuer(issuerId: Uint<16>, issuerPublicKey: JubjubPoint): [] {
+  assert(adminKey == deriveAdminKey(getHolderSecret()), "Only the contract administrator can register issuers");
+  trustedIssuers.insert(disclose(issuerId), disclose(issuerPublicKey));
+}
+
+export circuit removeIssuer(issuerId: Uint<16>): [] {
+  assert(adminKey == deriveAdminKey(getHolderSecret()), "Only the contract administrator can remove issuers");
+  assert(trustedIssuers.member(disclose(issuerId)), "Issuer is not registered");
+  trustedIssuers.remove(disclose(issuerId));
+}
+
+export circuit setPolicy(nextPolicyHash: Bytes<32>): [] {
+  assert(adminKey == deriveAdminKey(getHolderSecret()), "Only the contract administrator can change policy");
+  assert(nextPolicyHash != policyHash, "The policy hash is unchanged");
+  policyHash = disclose(nextPolicyHash);
+}
+
+// The issuer signs only the two predicates, a holder-scoped binding and the
+// policy binding. The underlying patient record never becomes a circuit output.
+export circuit proveEligibility(nonce: Bytes<32>): Boolean {
+  const [credential, signature, issuerId] = getEligibilityCredential();
+  const disclosedIssuerId = disclose(issuerId);
+  assert(trustedIssuers.member(disclosedIssuerId), "Credential issuer is not registered");
+
+  const holderSecret = getHolderSecret();
+  const holderBinding = transientHash<HolderSecret>(holderSecret);
+  const policyBinding = transientHash<Bytes<32>>(policyHash);
+  const message: Vector<4, Field> = [
+    credential.ageOver18 as Field,
+    credential.qualifyingPathway as Field,
+    holderBinding,
+    policyBinding
+  ];
+
+  Schnorr_schnorrVerify<4>(message, signature, trustedIssuers.lookup(disclosedIssuerId));
+  assert(credential.ageOver18, "The age requirement is not satisfied");
+  assert(credential.qualifyingPathway, "The care-pathway requirement is not satisfied");
+
+  const nullifier = persistentHash<Vector<4, Bytes<32>>>([
+    pad(32, "triagekey:nullifier:v1"),
+    holderSecret as Bytes<32>,
+    nonce,
+    policyHash
+  ]);
+  const publicNullifier = disclose(nullifier);
+  assert(!usedNullifiers.member(publicNullifier), "This credential has already been used for this request");
+  usedNullifiers.insert(publicNullifier);
+  finalizedProofs.increment(1);
+  return disclose(true);
 }
