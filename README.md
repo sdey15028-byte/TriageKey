@@ -54,6 +54,15 @@ Before the first backend deployment, run `uv run --directory backend alembic upg
 
 The proof station scrolls into public-receipt and plain-language privacy sections from its persistent rail. Public dashboard metrics use same-origin `/api` on Vercel and the `VITE_API_URL` override locally. After a real Midnight finalization, the site displays and retains the deployed contract address, transaction hash, transaction ID, network, block and timestamp with copy and explorer controls. It deliberately shows an unavailable state rather than fabricated values. No user credential data is included in the deployed static bundle.
 
+## Reference deployments
+
+These finalized public identifiers are provided for verifying the deployed TriageKey contracts. They are documentation references only; the application still obtains each new deployment address and transaction hash directly from the wallet-approved Midnight transaction.
+
+| Network | Contract address | Transaction hash |
+| --- | --- | --- |
+| Preview | `dce266d277c925ad315630d4f5f93e69b86d9bd5e702152e2e20eac6e379ff9d` | [`ab44c92ad5e27f9be3813526ce98396485e34be348dcfd0302d5e05d33cd2191`](https://preview.midnightexplorer.com/transactions/ab44c92ad5e27f9be3813526ce98396485e34be348dcfd0302d5e05d33cd2191) |
+| Preprod | `1e909a0c0028f540b1f91cc097abd8c99e9ff1152cac29b923ece8102f3a9752` | [`bb0169346414bdd6ab28f84e659f9fc7bbac322d93d33337feb96b3684ebbccf`](https://preprod.midnightexplorer.com/transactions/bb0169346414bdd6ab28f84e659f9fc7bbac322d93d33337feb96b3684ebbccf) |
+
 ## CI/CD
 
 GitHub Actions verifies Node 22, Python, frontend lint/tests/build, and backend lint/tests. Each Vercel deployment builds both services together; no deployment is claimed by this repository.
