@@ -1,0 +1,8 @@
+services:
+  proof-server:
+    image: ghcr.io/midnight-ntwrk/proof-server:latest
+    ports: ["6300:6300"]
+    environment:
+      NETWORK_ID: ${MIDNIGHT_NETWORK:-preview}
+      INDEXER_URL: ${MIDNIGHT_INDEXER_URL:?set MIDNIGHT_INDEXER_URL}
+      NODE_URL: ${MIDNIGHT_NODE_URL:?set MIDNIGHT_NODE_URL}

@@ -1,0 +1,5 @@
+backend/
+contracts/
+docs/
+tests/
+docker-compose.proof.yml
