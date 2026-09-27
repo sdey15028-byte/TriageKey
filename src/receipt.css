@@ -1,0 +1,18 @@
+.receipt-card .receipt-status {
+  color: #245d49;
+}
+
+.receipt-checklist p svg {
+  color: #2d725a;
+}
+
+.receipt-checklist p:last-child svg {
+  color: #e66938;
+}
+
+.identifier button:focus-visible,
+.receipt-actions a:focus-visible,
+.receipt-actions button:focus-visible {
+  outline: 3px solid #0d5c63;
+  outline-offset: 3px;
+}

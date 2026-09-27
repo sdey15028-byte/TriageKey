@@ -20,10 +20,13 @@ class PublicReceipt(Base):
     __tablename__ = "public_receipts"
 
     transaction_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    transaction_hash: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
     contract_address: Mapped[str] = mapped_column(String(128), nullable=False)
-    disclosure_scope: Mapped[str] = mapped_column(String(20), nullable=False)
-    nullifier: Mapped[str] = mapped_column(String(128), nullable=False, unique=True, index=True)
+    receipt_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    disclosure_scope: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    nullifier: Mapped[str | None] = mapped_column(String(128), nullable=True, unique=True, index=True)
     network: Mapped[str] = mapped_column(String(20), nullable=False)
+    block_height: Mapped[int | None] = mapped_column(nullable=True)
     finalized_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
@@ -44,8 +47,12 @@ async def get_session() -> AsyncIterator[AsyncSession]:
 
 
 async def receipt_metrics(session: AsyncSession) -> tuple[int, int]:
-    total = await session.scalar(select(func.count()).select_from(PublicReceipt))
+    total = await session.scalar(
+        select(func.count()).select_from(PublicReceipt).where(PublicReceipt.receipt_type == "proof")
+    )
     eligible = await session.scalar(
-        select(func.count()).select_from(PublicReceipt).where(PublicReceipt.disclosure_scope == "eligible")
+        select(func.count()).select_from(PublicReceipt).where(
+            PublicReceipt.receipt_type == "proof", PublicReceipt.disclosure_scope == "eligible"
+        )
     )
     return int(total or 0), int(eligible or 0)

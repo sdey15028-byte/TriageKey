@@ -11,6 +11,8 @@ dependencies = [
 dev = ["pytest==8.3.5", "pytest-asyncio==0.26.0", "httpx==0.28.1", "ruff==0.11.2"]
 [tool.pytest.ini_options]
 pythonpath = ["."]
+addopts = "-p no:cacheprovider"
+asyncio_default_fixture_loop_scope = "function"
 [tool.ruff]
 line-length = 100
 target-version = "py311"

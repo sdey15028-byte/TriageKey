@@ -30,7 +30,7 @@ uv run --directory backend uvicorn app.main:app --reload
 
 Copy `.env.example` to `backend/.env`. Keep `GEMINI_API_KEY` server-side. Use a Neon development branch for `DATABASE_URL`; reserve `DATABASE_DIRECT_URL` for `uv run --directory backend alembic upgrade head`.
 
-For a real Midnight run, install the Compact compiler matching your chosen Preview/Preprod release, compile `contracts/TriageKey.compact`, commit the generated browser artifacts, set `VITE_TRIAGEKEY_CONTRACT_ADDRESS`, configure 1AM with the same network, and start a proof server:
+For a real Midnight run, compile `contracts/TriageKey.compact` with the pinned `0.31.1` toolchain (`npm run contracts:compile`; Docker Desktop is required on Windows), commit the generated browser artifacts, configure 1AM with the same network, and start a proof server. The application must obtain the deployed contract address at runtime from the wallet-approved deployment flow; it is not a frontend environment variable:
 
 ```bash
 docker compose -f docker-compose.proof.yml up
@@ -46,18 +46,17 @@ uv run --directory backend pytest
 
 ## Vercel deployment
 
-Import this repository twice as two independent Vercel projects:
+Import this repository once and select **Services** as the Vercel project framework. The root `vercel.json` builds the Vite frontend and FastAPI backend as independent services in one deployment, routes `/api/*` to FastAPI, and routes all other paths to Vite. No frontend API URL is required in Vercel because production requests use the same-origin `/api` default.
 
-1. **Frontend project:** leave Root Directory at the repository root. Vercel detects Vite, runs `npm run build`, serves `dist/`, and reads the SPA rewrite from `vercel.json`. Set `VITE_API_URL` to the backend project URL.
-2. **Backend project:** set Root Directory to `backend`. Vercel detects FastAPI through `app/main.py` and `[tool.vercel]` in `pyproject.toml`; no custom build command is needed. Set `DATABASE_URL`, `DATABASE_DIRECT_URL`, `GEMINI_API_KEY`, `CORS_ORIGINS`, `ENVIRONMENT=production`, and `API_DOCS_ENABLED=false`. Set `CORS_ORIGINS` to the exact frontend Vercel URL.
+Add `DATABASE_URL`, `CORS_ORIGINS`, `ENVIRONMENT=production`, and `API_DOCS_ENABLED=false` in the Vercel project; `GEMINI_API_KEY` is optional. Set `CORS_ORIGINS` to the exact production domain. Keep `DATABASE_DIRECT_URL` only in the trusted local/CI environment that runs Alembic rather than exposing it to the runtime service. Do not add a contract-address environment variable—the finalized address is produced by the wallet-approved Midnight deployment.
 
 Before the first backend deployment, run `uv run --directory backend alembic upgrade head` locally or from a trusted CI job using the **direct, non-pooler** Neon URL. Runtime API traffic uses `DATABASE_URL`, which should be the pooled `-pooler` URL. The API automatically creates the SQLite schema only in local development; it never performs production schema changes at startup.
 
-The proof station scrolls into public-receipt and plain-language privacy sections from its persistent rail. Public dashboard metrics are fetched from the deployed API when `VITE_API_URL` is configured; the UI deliberately shows an unavailable state rather than fabricated values. No user credential data is included in the deployed static bundle.
+The proof station scrolls into public-receipt and plain-language privacy sections from its persistent rail. Public dashboard metrics use same-origin `/api` on Vercel and the `VITE_API_URL` override locally. After a real Midnight finalization, the site displays and retains the deployed contract address, transaction hash, transaction ID, network, block and timestamp with copy and explorer controls. It deliberately shows an unavailable state rather than fabricated values. No user credential data is included in the deployed static bundle.
 
 ## CI/CD
 
-GitHub Actions verifies Node 22, Python, frontend lint/tests/build, and backend lint/tests. Each connected Vercel project produces independent preview and production deployments; no deployment is claimed by this repository.
+GitHub Actions verifies Node 22, Python, frontend lint/tests/build, and backend lint/tests. Each Vercel deployment builds both services together; no deployment is claimed by this repository.
 
 ## Repository map
 
@@ -65,4 +64,4 @@ GitHub Actions verifies Node 22, Python, frontend lint/tests/build, and backend 
 
 ## Limitations and next steps
 
-The repository intentionally does not pretend an unconfigured wallet, contract address, compiler, proof server, Neon project, Gemini key, or hosting target exists. Before production: compile against the selected Midnight network release, integrate generated contract bindings in `src/lib`, deploy the contract, provision Neon branches, configure the backend host, and capture real UI/test screenshots plus a real demo recording.
+The repository intentionally does not pretend an unconfigured wallet, compiler, proof server, Neon project, Gemini key, or hosting target exists. The receipt pipeline and deployment-adapter boundary are implemented, but a real transaction still requires compiling `contracts/TriageKey.compact` against the selected Midnight network release and registering those generated bindings with `registerDeploymentAdapter`. Before production, also provision Neon, run the migration, configure the Vercel Services project, and capture a real wallet-backed demo.

@@ -1,10 +1,10 @@
+import type { ConnectedAPI, InitialAPI } from '@midnight-ntwrk/dapp-connector-api'
+
 export type Network = 'preview' | 'preprod'
 export type WalletState = 'idle' | 'connecting' | 'connected' | 'unsupported' | 'rejected' | 'error'
 
-type InitialWallet = { name?: string; apiVersion?: string; connect: (network: string) => Promise<unknown> }
-declare global { interface Window { midnight?: Record<string, InitialWallet> } }
-
-export type DiscoveredWallet = { id: string; name: string; apiVersion: string; connect: (network: Network) => Promise<unknown> }
+export type WalletSession = ConnectedAPI
+export type DiscoveredWallet = { id: string; name: string; apiVersion: string; connect: InitialAPI['connect'] }
 
 export function discoverWallets(): DiscoveredWallet[] {
   return Object.entries(window.midnight ?? {}).map(([id, wallet]) => ({
@@ -12,10 +12,16 @@ export function discoverWallets(): DiscoveredWallet[] {
   })).sort((a, b) => Number(/1am/i.test(b.name)) - Number(/1am/i.test(a.name)))
 }
 
-export async function connectWallet(network: Network): Promise<{ wallet: DiscoveredWallet; session: unknown }> {
+export async function connectWallet(network: Network): Promise<{ wallet: DiscoveredWallet; session: WalletSession }> {
   const wallet = discoverWallets()[0]
   if (!wallet) throw new Error('No Midnight wallet was found. Install and unlock 1AM, then try again.')
+  if (!/^4\./.test(wallet.apiVersion)) throw new Error(`The wallet uses unsupported DApp Connector API ${wallet.apiVersion}. TriageKey requires version 4.x.`)
   const session = await wallet.connect(network)
+  const status = await session.getConnectionStatus()
+  const configuration = await session.getConfiguration()
+  if (status.status !== 'connected' || status.networkId !== network || configuration.networkId !== network) {
+    throw new Error(`1AM connected to ${configuration.networkId}, but TriageKey requested ${network}.`)
+  }
   return { wallet, session }
 }
 

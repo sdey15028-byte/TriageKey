@@ -10,4 +10,8 @@ Patient browser ── local credential / witness ──> Midnight wallet + proo
 
 The Vite application discovers UUID-keyed `window.midnight` providers, lists 1AM first, and resets its session on a network change. It never manufactures a receipt: without a connected wallet and real finalization, the UI remains in a clear non-final state.
 
+After finalization, the browser extracts only `contractAddress`, `txId`, `txHash`, block height and block timestamp from Midnight.js deployment public data. The receipt card persists those public identifiers on the device, exposes copy and network-explorer actions, and never serializes the full deployment object because that object also contains private state and signing material.
+
 FastAPI uses async-capable SQLAlchemy dependencies and supports SQLite locally. Use a pooled Neon connection for API traffic and `DATABASE_DIRECT_URL` for Alembic migration commands. Production receipt storage must use the migration in `backend/alembic/`.
+
+Vercel Services builds the Vite root and `backend/` as separate services in one deployment. Top-level routing sends `/api/*` to FastAPI and all other paths to Vite, so production browser requests remain same-origin.
