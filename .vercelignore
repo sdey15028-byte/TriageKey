@@ -1,5 +1,10 @@
-backend/
-contracts/
+# Keep deployable service roots in the upload. Vercel resolves both the
+# frontend and backend services only after applying this repository-level file.
 docs/
 tests/
 docker-compose.proof.yml
+backend/tests/
+backend/.venv/
+backend/.pytest_cache/
+backend/.ruff_cache/
+backend/triagekey.db
