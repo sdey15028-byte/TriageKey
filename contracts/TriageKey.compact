@@ -1,0 +1,35 @@
+// TriageKey is a selective-disclosure eligibility contract.
+// The public ledger contains only policy metadata, aggregate counts and nullifiers.
+pragma language_version >= 0.16;
+
+export ledger policy_hash: Bytes<32>;
+export ledger finalized_proofs: Uint<64>;
+export ledger used_nullifiers: Set<Bytes<32>>;
+
+// Private witness fields are supplied by the holder’s local credential adapter.
+// They never appear in public ledger state or a disclosure call.
+witness private issuer_signature: Bytes<64>;
+witness private age_over_18: Boolean;
+witness private qualifying_pathway: Boolean;
+witness private holder_secret: Bytes<32>;
+
+// disclose() justification: the verifier needs only the yes/no result in order
+// to grant or refuse program access. It must not learn any underlying attribute.
+export circuit prove_eligibility(policy: Bytes<32>, nonce: Bytes<32>): Boolean {
+  assert(policy == policy_hash);
+  assert(age_over_18);
+  assert(qualifying_pathway);
+  assert(verify_issuer_signature(issuer_signature, policy, holder_secret));
+  const nullifier = hash(holder_secret, nonce, policy);
+  assert(!used_nullifiers.member(nullifier));
+  used_nullifiers.insert(nullifier);
+  finalized_proofs = finalized_proofs + 1;
+  return disclose(true);
+}
+
+// A separate circuit allows an authority to set a public policy hash, without
+// receiving a holder’s witness. It is intentionally independent from proving.
+export circuit set_policy(next_policy_hash: Bytes<32>): [] {
+  assert(next_policy_hash != policy_hash);
+  policy_hash = next_policy_hash;
+}
