@@ -66,10 +66,11 @@ https://drive.google.com/file/d/1-Tk4z8I1Qm2pkHDNKZVRVW_Ja9j-RAGf/view?usp=shari
 <img width="1400" height="700" alt="Screenshot 2026-09-29 014400" src="https://github.com/user-attachments/assets/6511d32d-99c3-48a6-b880-639ee6c7826c" />
 <img width="1400" height="700" alt="Screenshot 2026-09-29 014345" src="https://github.com/user-attachments/assets/2ac2b25c-3b91-493d-ad57-39352e42452d" />
 <img width="1400" height="700" alt="Screenshot 2026-09-29 014248" src="https://github.com/user-attachments/assets/866857a2-730a-45bc-9895-c8a9ae9cc445" />
+
 ## Mobile Responsive UI
 
-<img width="300" height="700" alt="Screenshot_2026-09-29-01-46-24-899_com android chrome" src="https://github.com/user-attachments/assets/a921f5a1-f8b2-427f-a514-bcd9e7f911bf" />
-<img width="300" height="700" alt="Screenshot_2026-09-29-01-46-28-034_com android chrome" src="https://github.com/user-attachments/assets/cd6ef05d-c5ab-443c-b5da-4c7b59fc4084" />
+<img width="300" height="500" alt="Screenshot_2026-09-29-01-46-24-899_com android chrome" src="https://github.com/user-attachments/assets/a921f5a1-f8b2-427f-a514-bcd9e7f911bf" />
+<img width="300" height="500" alt="Screenshot_2026-09-29-01-46-28-034_com android chrome" src="https://github.com/user-attachments/assets/cd6ef05d-c5ab-443c-b5da-4c7b59fc4084" />
 
 ## CI CD Pipeline
 <img width="1917" height="785" alt="image" src="https://github.com/user-attachments/assets/264e47b3-b540-45fc-b0b7-7d3095e9a01e" />
