@@ -53,6 +53,26 @@ Add `DATABASE_URL`, `CORS_ORIGINS`, `ENVIRONMENT=production`, and `API_DOCS_ENAB
 Before the first backend deployment, run `uv run --directory backend alembic upgrade head` locally or from a trusted CI job using the **direct, non-pooler** Neon URL. Runtime API traffic uses `DATABASE_URL`, which should be the pooled `-pooler` URL. The API automatically creates the SQLite schema only in local development; it never performs production schema changes at startup.
 
 The proof station scrolls into public-receipt and plain-language privacy sections from its persistent rail. Public dashboard metrics use same-origin `/api` on Vercel and the `VITE_API_URL` override locally. After a real Midnight finalization, the site displays and retains the deployed contract address, transaction hash, transaction ID, network, block and timestamp with copy and explorer controls. It deliberately shows an unavailable state rather than fabricated values. No user credential data is included in the deployed static bundle.
+## Live Website Url
+
+https://triage-key.vercel.app/
+
+## Demo Video URL
+
+https://drive.google.com/file/d/1-Tk4z8I1Qm2pkHDNKZVRVW_Ja9j-RAGf/view?usp=sharing
+
+## Website Screenshots
+
+<img width="1400" height="700" alt="Screenshot 2026-09-29 014400" src="https://github.com/user-attachments/assets/6511d32d-99c3-48a6-b880-639ee6c7826c" />
+<img width="1400" height="700" alt="Screenshot 2026-09-29 014345" src="https://github.com/user-attachments/assets/2ac2b25c-3b91-493d-ad57-39352e42452d" />
+<img width="1400" height="700" alt="Screenshot 2026-09-29 014248" src="https://github.com/user-attachments/assets/866857a2-730a-45bc-9895-c8a9ae9cc445" />
+## Mobile Responsive UI
+
+<img width="300" height="700" alt="Screenshot_2026-09-29-01-46-24-899_com android chrome" src="https://github.com/user-attachments/assets/a921f5a1-f8b2-427f-a514-bcd9e7f911bf" />
+<img width="300" height="700" alt="Screenshot_2026-09-29-01-46-28-034_com android chrome" src="https://github.com/user-attachments/assets/cd6ef05d-c5ab-443c-b5da-4c7b59fc4084" />
+
+## CI CD Pipeline
+<img width="1917" height="785" alt="image" src="https://github.com/user-attachments/assets/264e47b3-b540-45fc-b0b7-7d3095e9a01e" />
 
 ## Reference deployments
 
